@@ -1,0 +1,11 @@
+{
+    "name": "bash-language-server",
+    "id": "bash-language-server",
+    "version": "1.0.0",
+    "description": "Installs shellcheck and bash-language-server (via npm)",
+    "options": {},
+    "dependsOn": {
+        "ghcr.io/devcontainers/features/node": {},
+        "ghcr.io/devcontainers-extra/features/shfmt": {},
+    },
+}
