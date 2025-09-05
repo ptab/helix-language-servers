@@ -5,12 +5,12 @@ Unfortunately, it doesn't look like Helix is ready for this ([evidence A](https:
 
 I decided to look around for inspiration, and in the README of [lspcontainers.nvim](https://github.com/lspcontainers/lspcontainers.nvim) I found [something very familiar](https://github.com/lspcontainers/lspcontainers.nvim#process-id):
 
-> The LSP spec allows a client to send its process id to a language server, so that the server can exit immediately when it detects that the client is no longer running.
-> This feature fails to work properly on a containerized language server because the host and the container do not share the container namespace by default.
-> A container can share a process namespace with the host by passing the `--pid=host` flag to docker/podman, although it should be noted that this somewhat reduces isolation.
-> It is also possible to simply disable the process id detection.
-> ...
-> This is required for several LSPs, and they will exit immediately if this is not specified.
+> The LSP spec allows a client to send its process id to a language server, so that the server can exit immediately when it detects that the client is no longer running.  
+> This feature fails to work properly on a containerized language server because the host and the container do not share the container namespace by default.  
+> A container can share a process namespace with the host by passing the `--pid=host` flag to docker/podman, although it should be noted that this somewhat reduces isolation.  
+> It is also possible to simply disable the process id detection.  
+> ...  
+> This is required for several LSPs, and they will exit immediately if this is not specified.  
 
 The first thing I did was to start my devcontainer with `--pid=host`, but that did not make any difference - the language server still died after a few seconds.
 So the logical next step was to try and stop Helix from sending the `processId` parameter.
