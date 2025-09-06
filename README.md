@@ -6,7 +6,7 @@
 2. Configure whatever LSPs you want to run (the current configuration includes Bash, JSON, Python and YAML)
 2. Start the devcontainer
    ```sh
-   devcontainer up
+   devcontainer up --workspace-folder . --id-label name=language-servers --remove-existing-container
    ```
    Or alternatively with:
    ```sh
