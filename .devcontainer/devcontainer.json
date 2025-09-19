@@ -1,0 +1,18 @@
+{
+  "name": "language-servers",
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
+
+  "runArgs": ["--name", "language-servers"],
+
+  // https://containers.dev/features
+  "features": {
+    "./features/bash-language-server": {},
+    "./features/yaml-language-server": {},
+    "./features/json-language-server": {},
+    "ghcr.io/devcontainers-extra/features/ruff": {},
+  },
+
+  "postCreateCommand": {
+    "set-npm-path": "export PATH=\"$PATH:$(npm bin -g)\"",
+  },
+}

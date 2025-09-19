@@ -1,0 +1,3 @@
+#!/bin/sh -eu
+
+exec sh -c "python3 proxy.py | devcontainer exec --id-label name=language-servers $(basename $0) \"$@\""
