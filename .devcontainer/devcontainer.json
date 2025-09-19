@@ -1,5 +1,5 @@
 {
-  "image": "${localEnv:IMAGE:mcr.microsoft.com/devcontainers/base:debian}",
+  "image": "${localEnv:IMAGE:mcr.microsoft.com/devcontainers/base:trixie}",
  
   "features": {
     "ghcr.io/ptab/devcontainer-features/helix-language-server-proxy": {},
@@ -11,10 +11,10 @@
   },
   
   "runArgs": [
-    "-v", "${localEnv:SSH_AUTH_SOCK}:/run/host-services/ssh-auth.sock"
+    // this needs to be --volume, --mount won't work
+    "--volume", "${localEnv:SSH_AUTH_SOCK}:/run/host-services/ssh-auth.sock",
   ],
 
-  "containerUser": "vscode",
   "remoteUser": "vscode",
   
   "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
@@ -31,5 +31,6 @@
   "onCreateCommand": {
     "add-github-to-known-hosts": "mkdir -p ~/.ssh && curl --silent https://api.github.com/meta | jq --raw-output '\"github.com \"+.ssh_keys[]' >> ~/.ssh/known_hosts",
     "socket-permissions": "sudo chown -R $(id -u) /run/host-services/ssh-auth.sock",
-  }
+  },
+
 }

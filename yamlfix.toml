@@ -1,0 +1,6 @@
+# All available options at https://lyz-code.github.io/yamlfix/#configuration-options
+
+sequence_style = "keep_style"
+whitelines = 1
+preserve_quotes = "true"
+line_length = 999  # because there's no way to fully disable it

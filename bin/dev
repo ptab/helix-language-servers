@@ -60,12 +60,11 @@ local_container() {
     "into")
         container=$(find_container "$dir")
         if [[ -n "$container" ]]; then
-            run_in_container "$container" /bin/zsh
+            exec devcontainer exec --container-id "$container" /bin/zsh
         else
-            echo "No devcontainer running for current directory"
+            echo "No devcontainer running for current directory."
             exit 1
         fi
-
         ;;
 
     *)
@@ -89,7 +88,13 @@ fallback_container() {
         ;;
 
     "into")
-        exec devcontainer exec --workspace-folder "$helix_container_dir" /bin/zsh
+        container=$(find_container "$helix_container_dir")
+        if [[ -n "$container" ]]; then
+            exec devcontainer exec --container-id "$container" /bin/zsh
+        else
+            echo "System devcontainer is not running, start one with: dev fb up"
+            exit 1
+        fi
         ;;
 
     *)
@@ -139,16 +144,18 @@ run_with_fallbacks() {
     # otherwise, if the system fallback container is running, run the command on that one
     # otherwise, run the command on the host
 
+    local dir
+    dir=$(pwd)
     local container
-    container=$(find_container "$(pwd)")
+    container=$(find_container "$dir")
 
     if [[ -n "$container" ]]; then
-        run_in_container "$container" "$@"
+        run_in_container "$container" "$dir" "$@"
     else
         container=$(find_container "$helix_container_dir")
 
         if [[ -n "$container" ]]; then
-            run_in_container "$container" "$@"
+            run_in_container "$container" "$helix_container_dir" "$@"
         else
             # remove the proxy command when running in the host
             if [[ $1 == "helix-language-server-proxy" ]]; then
@@ -162,11 +169,15 @@ run_with_fallbacks() {
 }
 
 run_in_container() {
-    # TODO print the devcontainer label as well to help with the logs
     local container=$1
+    local dir=$2
     shift
-    echo "[$container]" "$@" >&2
-    exec devcontainer exec --container-id="$container" "$@"
+    shift
+    echo "[$container $dir]" "$@" >&2
+    # FIXME for whatever reason, contrary to what the docs state, 'devcontainer exec' always starts the shell in $HOME rather than the workspace folder.
+    # this breaks calls from helix where it expects files (e.g. formatter configs) in the current directory
+    # exec devcontainer exec --container-id="$container" "$@"
+    docker exec -i --workdir "$dir" "$container" "$@"
 }
 
 if [[ $# -lt 1 ]]; then
