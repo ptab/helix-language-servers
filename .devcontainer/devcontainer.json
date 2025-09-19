@@ -1,18 +1,29 @@
 {
-  "name": "language-servers",
-  "image": "mcr.microsoft.com/devcontainers/base:debian",
+  "image": "${localEnv:IMAGE:mcr.microsoft.com/devcontainers/base:debian}",
 
-  "runArgs": ["--name", "language-servers"],
-
-  // https://containers.dev/features
   "features": {
-    "./features/bash-language-server": {},
-    "./features/yaml-language-server": {},
-    "./features/json-language-server": {},
-    "ghcr.io/devcontainers-extra/features/ruff": {},
+    "ghcr.io/ptab/devcontainer-features/helix-language-server-proxy": {},
+    "ghcr.io/ptab/devcontainer-features/json-language-server": {},
+    "ghcr.io/ptab/devcontainer-features/yaml-language-server": {},
+    "ghcr.io/ptab/devcontainer-features/bash-language-server": {},
+    "ghcr.io/ptab/devcontainer-features/metals": {},
+    "ghcr.io/devcontainers-extra/features/ruff": {} 
+  },
+  
+  "runArgs": [
+    "-v", "${localEnv:SSH_AUTH_SOCK}:/run/host-services/ssh-auth.sock"
+  ],
+
+  "containerEnv": {
+    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
   },
 
-  "postCreateCommand": {
-    "set-npm-path": "export PATH=\"$PATH:$(npm bin -g)\"",
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
   },
+  
+  "onCreateCommand": {
+    "add-github-to-known-hosts": "mkdir -p ~/.ssh && curl --silent https://api.github.com/meta | jq --raw-output '\"github.com \"+.ssh_keys[]' >> ~/.ssh/known_hosts",
+    "socket-permissions": "sudo chown -R vscode /run/host-services/ssh-auth.sock"
+  }
 }

@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+set -eu
+
+usage() {
+    me=$(basename "$0")
+    cat <<EOU
+Usage: $me <command>
+
+Commands:
+  $me up [args…]            Starts a devcontainer for the current directory, or a global one if a devcontainer.json is not found.
+  $me run <cmd> [args…]     Runs a command inside a devcontainer. First tries the current directory, then the global one, then runs the command locally.
+  $me proxy <cmd> [args…]   Runs a command inside a devcontainer with a special setting for language servers and Helix. Uses the same fallback logic as '$me run'.
+  $me into                  Opens a new shell inside a devcontainer. Uses the same fallback logic as '$me run'.
+EOU
+}
+
+if [[ $# -lt 1 ]]; then
+    usage
+    exit 1
+fi
+
+helix_container_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
+
+command="$1"
+shift
+args=("$@")
+
+case "$command" in
+
+"up")
+    if devcontainer read-configuration --workspace-folder . >/dev/null 2>&1; then
+        # if there is a devcontainer in the current directory, use it as a base to the helix one
+
+        image="repo-$(basename "$(pwd)"):latest"
+
+        # build the container for the current directory
+        devcontainer build --workspace-folder . --image-name "$image"
+
+        # start the custom helix container on top of ☝️
+        IMAGE="$image" exec devcontainer up --workspace-folder . --override-config "$helix_container_dir/.devcontainer/devcontainer.json" "${args[@]}"
+
+    else
+        # if there is no devcontainer in the current directory, start the helix one standalone
+        exec devcontainer up --workspace-folder "$helix_container_dir" "${args[@]}"
+
+    fi
+
+    ;;
+
+"run")
+    set +u
+    if [[ $# -lt 1 ]]; then
+        usage
+        exit 1
+    fi
+    set -u
+
+    running_containers=$(docker ps --format "{{.ID}}\t{{.Label \"devcontainer.local_folder\"}}")
+
+    find_container() {
+        while IFS=$'\t' read -r container folder; do
+            if [[ $1 == "$folder"* ]]; then
+                echo "$container"
+                return
+            fi
+        done <<<"$running_containers"
+        echo ""
+    }
+
+    # find a running devcontainer for the current directory
+    container=$(find_container "$(pwd)")
+
+    if [[ -n "$container" ]]; then
+        echo "in container $container (current directory)>" "$@" >&2
+        exec devcontainer exec --container-id="$container" "$@"
+    else
+        # find the global helix devcontainer
+        container=$(find_container "$helix_container_dir")
+
+        if [[ -n "$container" ]]; then
+            echo "in container $container (global)>" "$@" >&2
+            exec devcontainer exec --container-id="$container" "$@"
+        else
+            # run the command locally
+            echo "$@" >&2
+            exec "$@"
+        fi
+    fi
+
+    ;;
+
+"proxy")
+    exec dev run helix-language-server-proxy "${args[@]}"
+    ;;
+
+"into")
+    exec dev run /bin/zsh
+    ;;
+
+*)
+    usage
+    exit 1
+    ;;
+
+esac

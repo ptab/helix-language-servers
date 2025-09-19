@@ -1,3 +1,0 @@
-#!/bin/sh -eu
-
-exec devcontainer exec --id-label name=language-servers $(basename $0) "$@"
