@@ -38,7 +38,9 @@ local_container() {
             devcontainer build --workspace-folder . --image-name "$image"
 
             # start the custom helix container on top of ☝️
-            IMAGE="$image" exec devcontainer up --workspace-folder . --override-config "$helix_container_json" "$@"
+            trap "rm .devcontainer/system-fallback" EXIT
+            ln -s "$helix_container_dir"/.devcontainer/ .devcontainer/system-fallback &&
+                IMAGE="$image" devcontainer up --workspace-folder . --config .devcontainer/system-fallback/devcontainer.json "$@"
 
         else
             # if there is no devcontainer in the current directory, use the configuration of the system fallback to start one for this directory
