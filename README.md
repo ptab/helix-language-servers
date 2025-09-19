@@ -23,8 +23,6 @@
    args = [ "proxy", "bash-language-server", "start" ]
    ```
 
-5. You should now be able to run Helix and enjoy a as usual and enjoy a nice integration with your chosen language(s)
-
 ## Why this repository exists
 
 #### Dev Containers
@@ -93,7 +91,7 @@ If the "helix container" is not running, then it runs the command locally (outsi
 
 #### `dev proxy <cmd> [args]`
 
-Shortcut for `dev run helix-language-server-proxy <cmd> [args]`.
+Shortcut for `dev run helix-language-server-proxy <cmd> [args]`. See [ptab/devcontainer-features/helix-language-server-proxy](https://github.com/ptab/devcontainer-features/blob/main/src/helix-language-server-proxy/README.md) for a full explanation of why this is needed.
 
 #### `dev into`
 
