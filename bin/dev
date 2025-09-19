@@ -8,11 +8,163 @@ usage() {
 Usage: $me <command>
 
 Commands:
-  $me up [args…]            Starts a devcontainer for the current directory, or a global one if a devcontainer.json is not found.
+  $me up [args…]            Starts a devcontainer for the current directory. If there is no devcontainer.json, it creates one using the system fallback configuration.
+  $me down [args…]          Stops the devcontainer for the current directory.
+  $me into                  Opens a new shell inside the devcontainer for the current directory.
+  $me fb up [args…]         Starts the system fallback container.
+  $me fb down [args…]       Stops the running system fallback container.
+  $me fb into               Opens a new shell inside the system fallback container.
   $me run <cmd> [args…]     Runs a command inside a devcontainer. First tries the current directory, then the global one, then runs the command locally.
   $me proxy <cmd> [args…]   Runs a command inside a devcontainer with a special setting for language servers and Helix. Uses the same fallback logic as '$me run'.
-  $me into                  Opens a new shell inside a devcontainer. Uses the same fallback logic as '$me run'.
 EOU
+}
+
+local_container() {
+    subcommand=$1
+    shift
+
+    dir=$(pwd)
+
+    case "$subcommand" in
+
+    "up")
+        if devcontainer read-configuration --workspace-folder . >/dev/null 2>&1; then
+            # if there is a devcontainer in the current directory, use it as a base for the system fallback one
+
+            local image
+            image="repo-$(basename "$dir"):latest"
+
+            # build the container for the current directory
+            devcontainer build --workspace-folder . --image-name "$image"
+
+            # start the custom helix container on top of ☝️
+            IMAGE="$image" exec devcontainer up --workspace-folder . --override-config "$helix_container_json" "$@"
+
+        else
+            # if there is no devcontainer in the current directory, use the configuration of the system fallback to start one for this directory
+
+            echo "No devcontainer config found in the current directory, creating a default one"
+            trap "rm .devcontainer" EXIT
+            ln -s "$helix_container_dir"/.devcontainer .devcontainer &&
+                devcontainer up --workspace-folder . "$@"
+
+        fi
+        ;;
+
+    "down")
+        stop_container "$dir"
+        ;;
+
+    "into")
+        container=$(find_container "$dir")
+        if [[ -n "$container" ]]; then
+            run_in_container "$container" /bin/zsh
+        else
+            echo "No devcontainer running for current directory"
+            exit 1
+        fi
+
+        ;;
+
+    *)
+        usage
+        ;;
+    esac
+}
+
+fallback_container() {
+    subcommand=$1
+    shift
+
+    case "$subcommand" in
+
+    "up")
+        exec devcontainer up --workspace-folder "$helix_container_dir" "$@"
+        ;;
+
+    "down")
+        stop_container "$helix_container_dir"
+        ;;
+
+    "into")
+        exec devcontainer exec --workspace-folder "$helix_container_dir" /bin/zsh
+        ;;
+
+    *)
+        usage
+        exit 1
+        ;;
+
+    esac
+}
+
+stop_container() {
+    # TODO replace with devcontainer down once they actually build that
+    local container
+    container=$(find_container "$1")
+    if [[ -n $container ]]; then
+        exec docker stop "$container"
+    fi
+}
+
+find_container() {
+    # Each devcontainer has a label like devcontainer.local_folder=/path/to/project
+    # Ideally we would just run the command like: devcontainer exec --workspace-folder $pwd
+    #
+    # Helix makes it hard to do this because it executes different commands from different base directories:
+    #   - starting the language server happens from the workspace directory (e.g. /path/to/project)
+    #   - formatter requests happen from the directory where the file lives (e.g. /path/to/project/path/to/directory)
+    #
+    # This means we need to be a bit smarter. To find the appropriate container for dir=/path/to/project/path/to/directory :
+    #   1. print all containers with label 'devcontainer.local_folder', e.g.:
+    #       abc1234  /some/other/different/repository
+    #       efg6789  /path/to/project
+    #   2. return the ID of the first container for which $dir is under the `devcontainer.local_folder` label:
+    #       /path/to/project/path/to/directory does not start with /some/other/different/repository   → continue
+    #       /path/to/project/path/to/directory starts with /path/to/project                           → run command in container efg6789
+
+    while IFS=$'\t' read -r container folder; do
+        if [[ "$1" == "$folder"* ]]; then
+            echo "$container"
+            return
+        fi
+    done < <(docker ps --format "{{.ID}}\t{{.Label \"devcontainer.local_folder\"}}")
+    echo ""
+}
+
+run_with_fallbacks() {
+    # if a local container is running, run the command on that one
+    # otherwise, if the system fallback container is running, run the command on that one
+    # otherwise, run the command on the host
+
+    local container
+    container=$(find_container "$(pwd)")
+
+    if [[ -n "$container" ]]; then
+        run_in_container "$container" "$@"
+    else
+        container=$(find_container "$helix_container_dir")
+
+        if [[ -n "$container" ]]; then
+            run_in_container "$container" "$@"
+        else
+            # remove the proxy command when running in the host
+            if [[ $1 == "helix-language-server-proxy" ]]; then
+                shift
+            fi
+
+            echo "$@" >&2
+            exec "$@"
+        fi
+    fi
+}
+
+run_in_container() {
+    # TODO print the devcontainer label as well to help with the logs
+    local container=$1
+    shift
+    echo "[$container]" "$@" >&2
+    exec devcontainer exec --container-id="$container" "$@"
 }
 
 if [[ $# -lt 1 ]]; then
@@ -21,98 +173,35 @@ if [[ $# -lt 1 ]]; then
 fi
 
 helix_container_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
+helix_container_json="$helix_container_dir/.devcontainer/devcontainer.json"
 
 command="$1"
 shift
-args=("$@")
 
 case "$command" in
 
 "up")
-    if devcontainer read-configuration --workspace-folder . >/dev/null 2>&1; then
-        # if there is a devcontainer in the current directory, use it as a base to the helix one
-
-        image="repo-$(basename "$(pwd)"):latest"
-
-        # build the container for the current directory
-        devcontainer build --workspace-folder . --image-name "$image"
-
-        # start the custom helix container on top of ☝️
-        IMAGE="$image" exec devcontainer up --workspace-folder . --override-config "$helix_container_dir/.devcontainer/devcontainer.json" "${args[@]}"
-
-    else
-        # if there is no devcontainer in the current directory, start the helix one standalone
-        exec devcontainer up --workspace-folder "$helix_container_dir" "${args[@]}"
-
-    fi
-
+    local_container up "$@"
     ;;
 
-"run")
-    set +u
-    if [[ $# -lt 1 ]]; then
-        usage
-        exit 1
-    fi
-    set -u
-
-    running_containers=$(docker ps --format "{{.ID}}\t{{.Label \"devcontainer.local_folder\"}}")
-
-    find_container() {
-        # Each devcontainer has a label like devcontainer.local_folder=/path/to/project
-        # Ideally we would just run the command like: devcontainer exec --workspace-folder $pwd
-        #
-        # Helix makes it hard to do this because it executes different commands from different base directories:
-        #   - starting the language server happens from the workspace directory (e.g. /path/to/project)
-        #   - formatter requests happen from the directory where the file lives (e.g. /path/to/project/path/to/directory)
-        #
-        # This means we need to be a bit smarter. To find the appropriate container for dir=/path/to/project/path/to/directory :
-        #   1. print all containers with label 'devcontainer.local_folder', e.g.:
-        #       abc1234  /some/other/different/repository
-        #       efg6789  /path/to/project
-        #   2. return the ID of the first container for which $dir is under the `devcontainer.local_folder` label:
-        #       /path/to/project/path/to/directory does not start with /some/other/different/repository   → continue
-        #       /path/to/project/path/to/directory starts with /path/to/project                           → run command in container efg6789
-
-        local dir="$1"
-
-        while IFS=$'\t' read -r container folder; do
-            if [[ "$dir" == "$folder"* ]]; then
-                echo "$container"
-                return
-            fi
-        done <<<"$running_containers"
-        echo ""
-    }
-
-    # find a running devcontainer for the current directory
-    container=$(find_container "$(pwd)")
-
-    if [[ -n "$container" ]]; then
-        echo "in container $container (current directory)>" "$@" >&2
-        exec devcontainer exec --container-id="$container" "$@"
-    else
-        # find the global helix devcontainer
-        container=$(find_container "$helix_container_dir")
-
-        if [[ -n "$container" ]]; then
-            echo "in container $container (global)>" "$@" >&2
-            exec devcontainer exec --container-id="$container" "$@"
-        else
-            # run the command locally
-            echo "$@" >&2
-            exec "$@"
-        fi
-    fi
-
-    ;;
-
-"proxy")
-    exec dev run helix-language-server-proxy "${args[@]}"
+"down")
+    local_container down "$@"
     ;;
 
 "into")
-    exec dev run /bin/zsh
+    local_container into
+    ;;
+
+"fb")
+    fallback_container "$@"
+    ;;
+
+"run")
+    run_with_fallbacks "$@"
+    ;;
+
+"proxy")
+    run_with_fallbacks helix-language-server-proxy "$@"
     ;;
 
 *)

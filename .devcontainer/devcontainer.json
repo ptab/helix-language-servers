@@ -1,12 +1,12 @@
 {
   "image": "${localEnv:IMAGE:mcr.microsoft.com/devcontainers/base:debian}",
-
+ 
   "features": {
     "ghcr.io/ptab/devcontainer-features/helix-language-server-proxy": {},
-    "ghcr.io/ptab/devcontainer-features/json-language-server": {},
-    "ghcr.io/ptab/devcontainer-features/yaml-language-server": {},
-    "ghcr.io/ptab/devcontainer-features/bash-language-server": {},
-    "ghcr.io/ptab/devcontainer-features/metals": {},
+    "./features/bash-language-server": {},
+    "./features/json-language-server": {},
+    "./features/yaml-language-server": {},
+    "./features/metals": {},
     "ghcr.io/devcontainers-extra/features/ruff": {} 
   },
   
@@ -14,6 +14,9 @@
     "-v", "${localEnv:SSH_AUTH_SOCK}:/run/host-services/ssh-auth.sock"
   ],
 
+  "containerUser": "vscode",
+  "remoteUser": "vscode",
+  
   "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
   "workspaceFolder": "${localWorkspaceFolder}",
 

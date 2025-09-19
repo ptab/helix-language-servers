@@ -1,0 +1,12 @@
+{
+    "name": "bash-language-server",
+    "id": "bash-language-server",
+    "version": "0.0.1",
+    "description": "Installs bash-language-server and dependencies (via npm)",
+    "options": {},
+    "dependsOn": {
+        "ghcr.io/devcontainers/features/node": {},
+        "ghcr.io/devcontainers-extra/features/shfmt": {},
+        "ghcr.io/devcontainers-extra/features/shellcheck": {},
+    },
+}
