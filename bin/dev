@@ -59,8 +59,25 @@ case "$command" in
     running_containers=$(docker ps --format "{{.ID}}\t{{.Label \"devcontainer.local_folder\"}}")
 
     find_container() {
+        # Each devcontainer has a label like devcontainer.local_folder=/path/to/project
+        # Ideally we would just run the command like: devcontainer exec --workspace-folder $pwd
+        #
+        # Helix makes it hard to do this because it executes different commands from different base directories:
+        #   - starting the language server happens from the workspace directory (e.g. /path/to/project)
+        #   - formatter requests happen from the directory where the file lives (e.g. /path/to/project/path/to/directory)
+        #
+        # This means we need to be a bit smarter. To find the appropriate container for dir=/path/to/project/path/to/directory :
+        #   1. print all containers with label 'devcontainer.local_folder', e.g.:
+        #       abc1234  /some/other/different/repository
+        #       efg6789  /path/to/project
+        #   2. return the ID of the first container for which $dir is under the `devcontainer.local_folder` label:
+        #       /path/to/project/path/to/directory does not start with /some/other/different/repository   → continue
+        #       /path/to/project/path/to/directory starts with /path/to/project                           → run command in container efg6789
+
+        local dir="$1"
+
         while IFS=$'\t' read -r container folder; do
-            if [[ $1 == "$folder"* ]]; then
+            if [[ "$dir" == "$folder"* ]]; then
                 echo "$container"
                 return
             fi

@@ -116,3 +116,17 @@ args = [ "proxy", "bash-language-server", "start" ]
 > See [ptab/devcontainer-features/helix-language-server-proxy](https://github.com/ptab/devcontainer-features/blob/main/src/helix-language-server-proxy/README.md) for a full explanation.
 
 Start a devcontainer with `dev up` and you should now be able to get your nice language server features in Helix, running inside a devcontainer!
+
+## (not so) Frequently Asked Questions
+
+#### _"Why do I need all this? Can't I just configure Helix to run my language server with `docker run …`?"_
+
+Unfortunately no, that will _start_ a language server but it will immediately die afterwards.
+See [ptab/devcontainer-features/helix-language-server-proxy](https://github.com/ptab/devcontainer-features/blob/main/src/helix-language-server-proxy/README.md) for a full explanation.
+
+#### _"What about the formatters? Can't I just run `docker run …` for those?"_
+
+Yes, you can. However that will start a new container each time Helix asks for a file to be formatted, which I find a bit wasteful.
+A better option is to set up Helix to call `docker exec …` or `devcontainer exec …` in those situations, but you need to figure out which container to run the command in.
+
+`dev run` automatically finds the appropriate container to run `devcontainer exec …`, plus it takes fewer characters so it's easier to remember 😉
