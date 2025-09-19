@@ -14,6 +14,9 @@
     "-v", "${localEnv:SSH_AUTH_SOCK}:/run/host-services/ssh-auth.sock"
   ],
 
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+  "workspaceFolder": "${localWorkspaceFolder}",
+
   "containerEnv": {
     "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
   },
@@ -24,6 +27,6 @@
   
   "onCreateCommand": {
     "add-github-to-known-hosts": "mkdir -p ~/.ssh && curl --silent https://api.github.com/meta | jq --raw-output '\"github.com \"+.ssh_keys[]' >> ~/.ssh/known_hosts",
-    "socket-permissions": "sudo chown -R vscode /run/host-services/ssh-auth.sock"
+    "socket-permissions": "sudo chown -R $(id -u) /run/host-services/ssh-auth.sock",
   }
 }
