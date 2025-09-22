@@ -1,0 +1,9 @@
+{
+    "name": "taplo",
+    "id": "taplo",
+    "version": "0.0.1",
+    "description": "Installs taplo with the language-server feature enabled",
+    "options": {},
+    "dependsOn": {
+    },
+}

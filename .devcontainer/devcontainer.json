@@ -5,9 +5,10 @@
     "ghcr.io/ptab/devcontainer-features/helix-language-server-proxy": {},
     "./features/bash-language-server": {},
     "./features/json-language-server": {},
+    "./features/python-language-server": {},
     "./features/yaml-language-server": {},
     "./features/metals": {},
-    "ghcr.io/devcontainers-extra/features/ruff": {} 
+    "./features/taplo": {},
   },
   
   "runArgs": [

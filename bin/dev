@@ -186,7 +186,6 @@ if [[ $# -lt 1 ]]; then
 fi
 
 helix_container_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
-helix_container_json="$helix_container_dir/.devcontainer/devcontainer.json"
 
 command="$1"
 shift

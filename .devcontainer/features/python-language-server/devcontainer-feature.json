@@ -1,0 +1,11 @@
+{
+    "name": "python-language-server",
+    "id": "python-language-server",
+    "version": "0.0.1",
+    "description": "Installs pylsp and ruff",
+    "options": {},
+    "dependsOn": {
+        "ghcr.io/devcontainers/features/python": {},
+        "ghcr.io/devcontainers-extra/features/ruff": {}, 
+    },
+}

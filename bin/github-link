@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+set -eu
+
+if [[ -z $1 ]]; then
+    echo "Error: no command provided." >&2
+    exit 1
+fi
+
+# --------- is this a real file in a git repository?
+
+if [[ -z $2 ]]; then
+    echo "Error: no file path provided." >&2
+    exit 1
+fi
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Error: not inside a git repository." >&2
+    exit 1
+fi
+
+# --------- transform the remote url into a browseable one
+
+remote_url=$(git config --get remote.origin.url)
+
+if [[ -z $remote_url ]]; then
+    echo "Error: no remote 'origin' URL for this repository." >&2
+    exit 1
+fi
+
+if [[ $remote_url == git@* ]]; then
+    # SSH format: git@github.com:user/repo.git
+    forge_url=$(sed -E 's|^git@(.+):(.+).git$|https://\1/\2|' <<<"$remote_url")
+else
+    # HTTPS format: https://github.com/user/repo.git
+    forge_url=${remote_url%.git}
+fi
+
+# --------- find the current branch
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [[ -z $branch ]]; then
+    echo "Error: could not determine the current branch." >&2
+    exit 1
+fi
+
+# --------- output the full URL
+
+git_root=$(git rev-parse --show-toplevel)
+current_dir=$(pwd)
+shopt -s nocasematch
+relative_path="${current_dir/$git_root/}"
+shopt -u nocasematch
+
+command=$1
+buffer_name=$2
+
+set +u
+lines=""
+if [[ -n $3 ]]; then
+    lines="#L$3"
+    if [[ -n $4 ]]; then
+        lines+="-L$4"
+    fi
+fi
+set -u
+
+file_url="$forge_url/blob/$branch/$relative_path$buffer_name$lines"
+
+# echo "root:           '$git_root'"
+# echo "current dir:    '$current_dir'"
+# echo "relative path:  '$relative_path'"
+# echo "buffer name:    '$buffer_name'"
+# echo "lines:          '$lines'"
+# echo "url:            $file_url"
+
+if [[ $command == "copy" ]]; then
+    pbcopy <<<"$file_url"
+elif [[ $command == "open" ]]; then
+    open "$file_url"
+else
+    echo "Error: invalid command $command." >&2
+    exit 1
+fi
