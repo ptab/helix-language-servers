@@ -1,0 +1,10 @@
+{
+  "name": "json-stack",
+  "id": "json-stack",
+  "version": "0.0.1",
+  "options": {},
+  "dependsOn": {
+    "./features/base": {},
+    "./features/prettier": {},
+  },
+}

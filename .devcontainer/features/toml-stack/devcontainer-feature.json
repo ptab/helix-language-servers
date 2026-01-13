@@ -1,0 +1,9 @@
+{
+  "name": "toml-stack",
+  "id": "toml-stack",
+  "version": "0.0.1",
+  "options": {},
+  "dependsOn": {
+    "./features/base": {},
+  },
+}

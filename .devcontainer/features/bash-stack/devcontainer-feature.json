@@ -1,0 +1,9 @@
+{
+  "name": "bash-stack",
+  "id": "bash-stack",
+  "version": "0.0.1",
+  "options": {},
+  "dependsOn": {
+    "./features/base": {},
+  },
+}

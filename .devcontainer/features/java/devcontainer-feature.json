@@ -1,0 +1,9 @@
+{
+  "name": "java",
+  "id": "java",
+  "version": "0.0.1",
+  "options": {},
+  "dependsOn": {
+    "./features/base": {},
+  },
+}

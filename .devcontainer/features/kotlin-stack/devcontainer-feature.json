@@ -1,0 +1,10 @@
+{
+  "name": "kotlin-stack",
+  "id": "kotlin-stack",
+  "version": "0.0.1",
+  "options": {},
+  "dependsOn": {
+    "./features/base": {},
+    "./features/java": {},
+  },
+}

@@ -1,37 +1,46 @@
 {
-  "image": "${localEnv:IMAGE:mcr.microsoft.com/devcontainers/base:trixie}",
- 
+  "image": "mcr.microsoft.com/devcontainers/base:alpine",
+
   "features": {
     "ghcr.io/ptab/devcontainer-features/helix-language-server-proxy": {},
-    "./features/bash-language-server": {},
-    "./features/json-language-server": {},
-    "./features/python-language-server": {},
-    "./features/yaml-language-server": {},
-    "./features/metals": {},
-    "./features/taplo": {},
+    "./features/base": {},
+    "./features/bash-stack": {},
+    "./features/json-stack": {},
+    "./features/python-stack": {},
+    "./features/yaml-stack": {},
+    "./features/kotlin-stack": {},
+    "./features/toml-stack": {},
+    "./features/markdown-stack": {},
+    "./features/pre-commit": {},
   },
-  
+
   "runArgs": [
     // this needs to be --volume, --mount won't work
-    "--volume", "${localEnv:SSH_AUTH_SOCK}:/run/host-services/ssh-auth.sock",
+    "--volume",
+    "${localEnv:SSH_AUTH_SOCK}:/run/host-services/ssh-auth.sock",
   ],
 
+  "containerUser": "vscode",
   "remoteUser": "vscode",
-  
+
+  // must be the exact same path as the host directory, otherwise LSPs will fail
   "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
   "workspaceFolder": "${localWorkspaceFolder}",
 
   "containerEnv": {
-    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
+    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",
   },
 
   "remoteEnv": {
-    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
+    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",
   },
-  
+
   "onCreateCommand": {
     "add-github-to-known-hosts": "mkdir -p ~/.ssh && curl --silent https://api.github.com/meta | jq --raw-output '\"github.com \"+.ssh_keys[]' >> ~/.ssh/known_hosts",
     "socket-permissions": "sudo chown -R $(id -u) /run/host-services/ssh-auth.sock",
   },
 
+  "postCreateCommand": {
+    "pre-commit": "pre-commit install --allow-missing-config",
+  },
 }

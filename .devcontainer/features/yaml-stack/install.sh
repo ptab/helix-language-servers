@@ -4,7 +4,7 @@ set -eu
 
 if ! command -v yamlfix &>/dev/null; then
     echo "Installing yamlfix…"
-    pipx install yamlfix
+    pipx install --global yamlfix
 fi
 
 echo "Installing yaml-language-server…"

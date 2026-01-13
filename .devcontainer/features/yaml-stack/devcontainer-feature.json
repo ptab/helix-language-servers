@@ -1,0 +1,9 @@
+{
+  "name": "yaml-stack",
+  "id": "yaml-stack",
+  "version": "0.0.1",
+  "options": {},
+  "dependsOn": {
+    "./features/base": {},
+  },
+}

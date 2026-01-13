@@ -1,0 +1,9 @@
+{
+    "name": "python-stack",
+    "id": "python-stack",
+    "version": "0.0.1",
+    "options": {},
+    "dependsOn": {
+        "./features/base": {},
+    },
+}

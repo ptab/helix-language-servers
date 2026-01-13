@@ -1,0 +1,10 @@
+{
+  "name": "scala-stack",
+  "id": "scala-stack",
+  "version": "0.0.1",
+  "options": {},
+  "dependsOn": {
+    "./features/base": {},
+    "./features/java": {},
+  },
+}

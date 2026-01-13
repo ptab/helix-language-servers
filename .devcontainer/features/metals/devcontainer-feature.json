@@ -1,7 +1,0 @@
-{
-    "name": "metals",
-    "id": "metals",
-    "version": "0.0.1",
-    "description": "Installs metals (via coursier)",
-    "options": {},
-}

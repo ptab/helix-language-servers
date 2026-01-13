@@ -1,0 +1,10 @@
+{
+    "name": "pre-commit",
+    "id": "pre-commit",
+    "version": "0.0.1",
+    "description": "Installs pre-commit (via pip)",
+    "options": {},
+    "dependsOn": {
+        "./features/python-stack": {},
+    },
+}
