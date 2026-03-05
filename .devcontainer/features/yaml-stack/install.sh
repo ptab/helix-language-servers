@@ -9,3 +9,6 @@ fi
 
 echo "Installing yaml-language-server…"
 npm install -g yaml-language-server
+
+echo "Installing GitHub Actions language server…"
+npm install -g @actions/languageserver
