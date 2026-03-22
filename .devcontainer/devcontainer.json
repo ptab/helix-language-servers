@@ -23,9 +23,14 @@
   "containerUser": "vscode",
   "remoteUser": "vscode",
 
-  // must be the exact same path as the host directory, otherwise LSPs will fail
+  // must be the exact same path as the host directory, otherwise some LSPs (especially JVM-related) will fail
   "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
   "workspaceFolder": "${localWorkspaceFolder}",
+  "mounts": {
+    "source": "gradle-cache",
+    "target": "/home/vscode/.gradle",
+    "type": "volume",
+  },
 
   "containerEnv": {
     "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",

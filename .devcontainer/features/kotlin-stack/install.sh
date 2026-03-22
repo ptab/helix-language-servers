@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-
 set -eu
 
-user_home="$(eval echo ~$_CONTAINER_USER)"
+user_home="$(eval echo ~"$_CONTAINER_USER")"
+lsp_version="262.2310.0"
 kotlin_lsp_dir="$user_home"/kotlin-lsp
-kotlin_release="https://download-cdn.jetbrains.com/kotlin-lsp/261.13587.0/kotlin-lsp-261.13587.0-linux-aarch64.zip"
+kotlin_release="https://download-cdn.jetbrains.com/kotlin-lsp/$lsp_version/kotlin-lsp-$lsp_version-linux-aarch64.zip"
+
+echo "Setting up permissions for shared Gradle cache volume…"
+su - "$_CONTAINER_USER" <<EOF
+    mkdir -p $user_home/.gradle
+EOF
 
 echo "Installing kotlin-lsp…"
-
-su - $_CONTAINER_USER <<EOF
+su - "$_CONTAINER_USER" <<EOF
     pushd $user_home
 
     curl -fL -o kotlin.zip "$kotlin_release" &&
