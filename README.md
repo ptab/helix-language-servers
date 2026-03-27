@@ -1,5 +1,8 @@
 # Helix and containerized LSPs
 
+> [!NOTE]
+> This project was moved to https://codeberg.org/ptab/devcontainers.
+
 ## TL;DR
 
 1. Clone this repository
